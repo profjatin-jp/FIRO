@@ -1,0 +1,801 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0">
+<title>Interpersonal Needs Questionnaire</title>
+<link href="https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+  :root {
+    --bg: #1E2535;
+    --card: #28304A;
+    --surface: #323C58;
+    --text: #F5F0E8;
+    --muted: #9BA5BF;
+    --teal: #4A9B8E;
+    --teal-light: #6DBFB3;
+    --amber: #E8A84A;
+    --amber-light: #F2C678;
+    --radius: 16px;
+    --transition: 0.28s cubic-bezier(.4,0,.2,1);
+  }
+
+  html, body {
+    min-height: 100%; height: 100%;
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Inter', sans-serif;
+    font-size: 16px;
+    -webkit-font-smoothing: antialiased;
+  }
+
+  #app {
+    min-height: 100vh;
+    display: flex;
+    flex-direction: column;
+    max-width: 540px;
+    margin: 0 auto;
+    padding: 0 20px 40px;
+  }
+
+  /* ── PROGRESS BAR ── */
+  #progress-wrap {
+    position: sticky; top: 0; z-index: 10;
+    background: var(--bg);
+    padding: 16px 0 12px;
+  }
+  #progress-track {
+    height: 4px;
+    background: var(--surface);
+    border-radius: 4px;
+    overflow: hidden;
+  }
+  #progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, var(--teal), var(--amber));
+    border-radius: 4px;
+    width: 0%;
+    transition: width var(--transition);
+  }
+  #progress-label {
+    font-size: 12px;
+    color: var(--muted);
+    text-align: right;
+    margin-top: 6px;
+  }
+
+  /* ── INTRO SCREEN ── */
+  #intro {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    padding: 40px 0 20px;
+  }
+  .eyebrow {
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.12em;
+    text-transform: uppercase;
+    color: var(--teal-light);
+    margin-bottom: 16px;
+  }
+  h1 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(28px, 7vw, 40px);
+    line-height: 1.15;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+  .intro-body {
+    color: var(--muted);
+    line-height: 1.7;
+    margin-bottom: 12px;
+    font-size: 15px;
+  }
+  .scale-legend {
+    display: flex;
+    gap: 6px;
+    flex-wrap: wrap;
+    margin: 20px 0 32px;
+  }
+  .scale-pill {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    background: var(--card);
+    border-radius: 40px;
+    padding: 6px 12px;
+    font-size: 13px;
+  }
+  .scale-num {
+    font-weight: 600;
+    color: var(--amber);
+  }
+
+  /* ── BUTTONS ── */
+  .btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    background: var(--teal);
+    color: #fff;
+    border: none;
+    border-radius: 40px;
+    padding: 14px 28px;
+    font-family: 'Inter', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background var(--transition), transform 0.1s;
+    width: 100%;
+    touch-action: manipulation;
+  }
+  .btn:active { transform: scale(0.98); }
+  .btn:hover { background: var(--teal-light); }
+  .btn.secondary {
+    background: var(--surface);
+    color: var(--muted);
+  }
+  .btn.secondary:hover { background: var(--card); color: var(--text); }
+
+  /* ── QUESTION SCREEN ── */
+  #question-screen { display: none; flex: 1; flex-direction: column; padding-top: 8px; }
+  #question-screen.active { display: flex; }
+
+  .q-card {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 28px 24px 24px;
+    margin-bottom: 24px;
+    flex: 0 0 auto;
+    animation: slideIn 0.25s ease;
+  }
+  @keyframes slideIn {
+    from { opacity: 0; transform: translateY(14px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+  .q-number {
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--teal-light);
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    margin-bottom: 14px;
+  }
+  .q-text {
+    font-size: clamp(16px, 4vw, 20px);
+    line-height: 1.55;
+    color: var(--text);
+    font-weight: 400;
+  }
+
+  /* ── RATING BUTTONS ── */
+  .rating-wrap {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+  .rating-btn {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+    background: var(--surface);
+    border: 2px solid transparent;
+    border-radius: 12px;
+    padding: 12px 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    touch-action: manipulation;
+  }
+  .rating-btn .r-num {
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--text);
+  }
+  .rating-btn .r-label {
+    font-size: 9px;
+    color: var(--muted);
+    text-align: center;
+    line-height: 1.3;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+  }
+  .rating-btn:hover, .rating-btn:focus {
+    border-color: var(--teal);
+    background: var(--card);
+  }
+  .rating-btn.selected {
+    background: var(--teal);
+    border-color: var(--teal-light);
+  }
+  .rating-btn.selected .r-num,
+  .rating-btn.selected .r-label { color: #fff; }
+
+  .nav-row {
+    display: flex;
+    gap: 10px;
+    margin-top: 4px;
+  }
+  .nav-row .btn { flex: 1; }
+
+  /* ── RESULTS SCREEN ── */
+  #results-screen { display: none; flex: 1; flex-direction: column; padding-top: 12px; }
+  #results-screen.active { display: flex; }
+
+  .results-header {
+    margin-bottom: 28px;
+  }
+  .results-header h2 {
+    font-family: 'DM Serif Display', serif;
+    font-size: clamp(24px, 6vw, 34px);
+    margin-bottom: 8px;
+  }
+  .results-header p { color: var(--muted); font-size: 14px; line-height: 1.6; }
+
+  /* ── RADAR CHART ── */
+  #radar-wrap {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 24px;
+    display: flex;
+    justify-content: center;
+  }
+  #radar-canvas { display: block; }
+
+  /* ── SCORE BARS ── */
+  .dim-block {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .dim-title {
+    font-weight: 600;
+    font-size: 15px;
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+  .dim-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .sub-row { margin-bottom: 10px; }
+  .sub-row:last-child { margin-bottom: 0; }
+  .sub-meta {
+    display: flex;
+    justify-content: space-between;
+    font-size: 13px;
+    color: var(--muted);
+    margin-bottom: 5px;
+  }
+  .sub-score { font-weight: 600; color: var(--text); }
+  .bar-track {
+    height: 8px;
+    background: var(--surface);
+    border-radius: 8px;
+    overflow: hidden;
+  }
+  .bar-fill {
+    height: 100%;
+    border-radius: 8px;
+    width: 0%;
+    transition: width 0.8s cubic-bezier(.4,0,.2,1);
+  }
+
+  /* ── INTERPRETATION ── */
+  .interp-block {
+    background: var(--card);
+    border-radius: var(--radius);
+    padding: 20px;
+    margin-bottom: 12px;
+  }
+  .interp-block h3 {
+    font-size: 14px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.08em;
+    color: var(--teal-light);
+    margin-bottom: 8px;
+  }
+  .interp-block p { font-size: 14px; color: var(--muted); line-height: 1.65; }
+  .interp-block strong { color: var(--text); }
+
+  .disclaimer {
+    font-size: 11px;
+    color: var(--muted);
+    text-align: center;
+    margin-top: 20px;
+    line-height: 1.6;
+    opacity: 0.7;
+  }
+
+  /* ── UTILITY ── */
+  .hidden { display: none !important; }
+  @media (prefers-reduced-motion: reduce) {
+    *, *::before, *::after { animation-duration: 0.01ms !important; transition-duration: 0.01ms !important; }
+  }
+</style>
+</head>
+<body>
+<div id="app">
+
+  <!-- PROGRESS -->
+  <div id="progress-wrap" class="hidden">
+    <div id="progress-track"><div id="progress-fill"></div></div>
+    <div id="progress-label"></div>
+  </div>
+
+  <!-- INTRO -->
+  <div id="intro">
+    <div class="eyebrow">Training instrument</div>
+    <h1>How do you connect with others?</h1>
+    <p class="intro-body">This questionnaire explores your interpersonal tendencies across three dimensions: <strong>Inclusion</strong>, <strong>Control</strong>, and <strong>Affection</strong>.</p>
+    <p class="intro-body">For each statement, choose how often it describes you. There are no right or wrong answers.</p>
+    <div class="scale-legend">
+      <div class="scale-pill"><span class="scale-num">1</span> Never</div>
+      <div class="scale-pill"><span class="scale-num">2</span> Rarely</div>
+      <div class="scale-pill"><span class="scale-num">3</span> Sometimes</div>
+      <div class="scale-pill"><span class="scale-num">4</span> Often</div>
+      <div class="scale-pill"><span class="scale-num">5</span> Always</div>
+    </div>
+    <button class="btn" onclick="startQuiz()">Begin &rarr;</button>
+  </div>
+
+  <!-- QUESTION SCREEN -->
+  <div id="question-screen">
+    <div class="q-card" id="q-card">
+      <div class="q-number" id="q-number"></div>
+      <div class="q-text" id="q-text"></div>
+    </div>
+    <div class="rating-wrap" id="rating-wrap"></div>
+    <div class="nav-row">
+      <button class="btn secondary" id="btn-back" onclick="goBack()">&#8592; Back</button>
+      <button class="btn" id="btn-next" onclick="goNext()" disabled>Next &rarr;</button>
+    </div>
+  </div>
+
+  <!-- RESULTS SCREEN -->
+  <div id="results-screen">
+    <div class="results-header">
+      <div class="eyebrow">Your profile</div>
+      <h2>Interpersonal Needs</h2>
+      <p>Your scores across Inclusion, Control, and Affection — both how you express each need and how much you want others to meet it.</p>
+    </div>
+    <div id="radar-wrap"><canvas id="radar-canvas" width="280" height="280"></canvas></div>
+    <div id="score-bars"></div>
+    <div id="interpretations"></div>
+    <p class="disclaimer">Developed for training purposes. Grounded in Schutz's (1958) FIRO theory. Not a validated psychometric instrument — scores are for reflection and discussion only.</p>
+    <br>
+    <button class="btn secondary" onclick="restart()" style="margin-top:8px">Retake questionnaire</button>
+  </div>
+
+</div>
+
+<script>
+// ── ITEM DATA ──────────────────────────────────────────────────────────────────
+const DIMS = [
+  {
+    key: 'inclusion', label: 'Inclusion', color: '#4A9B8E',
+    desc: 'Your tendency to seek or provide social involvement and belonging.',
+    expressed: {
+      label: 'Expressed Inclusion',
+      items: [
+        "I make an effort to include others in social activities and plans.",
+        "I actively initiate contact with people I want to spend time with.",
+        "I invite others to join group activities I am organising.",
+        "I reach out to bring people into conversations or events.",
+        "I take the initiative to join groups and social gatherings."
+      ]
+    },
+    wanted: {
+      label: 'Wanted Inclusion',
+      items: [
+        "I want others to invite me to join their activities.",
+        "I feel valued when people make an effort to include me.",
+        "I notice when I have been left out of plans.",
+        "I want to be recognised as part of a group.",
+        "I appreciate when others seek out my company."
+      ]
+    }
+  },
+  {
+    key: 'control', label: 'Control', color: '#E8A84A',
+    desc: 'Your tendency to take charge of — or defer to others in — decisions and direction.',
+    expressed: {
+      label: 'Expressed Control',
+      items: [
+        "I take charge when a group needs direction.",
+        "I offer my opinion on how things should be done.",
+        "I take responsibility for decisions that affect others.",
+        "I set the agenda in group settings I am part of.",
+        "I direct the actions of others when working on a shared task."
+      ]
+    },
+    wanted: {
+      label: 'Wanted Control',
+      items: [
+        "I prefer when others take the lead on decisions.",
+        "I am comfortable being told what to do.",
+        "I want clear direction from someone in charge.",
+        "I feel unsettled when no one is managing a situation.",
+        "I rely on others to set the structure for a task."
+      ]
+    }
+  },
+  {
+    key: 'affection', label: 'Affection', color: '#9B7FD4',
+    desc: 'Your comfort with emotional closeness — expressing it and receiving it.',
+    expressed: {
+      label: 'Expressed Affection',
+      items: [
+        "I openly express warmth toward people I am close to.",
+        "I tell people when I care about them.",
+        "I initiate physical or verbal expressions of affection.",
+        "I share personal feelings with people I trust.",
+        "I make an effort to stay emotionally connected with others."
+      ]
+    },
+    wanted: {
+      label: 'Wanted Affection',
+      items: [
+        "I want close relationships with the people around me.",
+        "I want others to show me they care.",
+        "I notice when someone is being emotionally distant with me.",
+        "I appreciate it when people check in on how I am feeling.",
+        "I feel reassured when others express affection toward me."
+      ]
+    }
+  }
+];
+
+// Build flat question list with dimension/type metadata, then shuffle
+function seededShuffle(arr, seed) {
+  let s = seed;
+  const rand = () => { s = (s * 9301 + 49297) % 233280; return s / 233280; };
+  const a = arr.slice();
+  for (let i = a.length - 1; i > 0; i--) {
+    const j = Math.floor(rand() * (i + 1));
+    [a[i], a[j]] = [a[j], a[i]];
+  }
+  return a;
+}
+
+const ALL_ITEMS = [];
+DIMS.forEach(dim => {
+  ['expressed', 'wanted'].forEach(type => {
+    dim[type].items.forEach(text => {
+      ALL_ITEMS.push({ text, dim: dim.key, type });
+    });
+  });
+});
+const QUESTIONS = seededShuffle(ALL_ITEMS, 42);
+
+// ── STATE ─────────────────────────────────────────────────────────────────────
+let current = 0;
+const answers = new Array(QUESTIONS.length).fill(null);
+const LABELS = ['Never', 'Rarely', 'Sometimes', 'Often', 'Always'];
+
+// ── SCREENS ───────────────────────────────────────────────────────────────────
+function show(screenId) {
+  ['intro','question-screen','results-screen'].forEach(id => {
+    const el = document.getElementById(id);
+    el.classList.remove('active');
+    el.style.display = '';
+  });
+  document.getElementById('progress-wrap').classList.toggle('hidden', screenId === 'intro' || screenId === 'results-screen');
+  if (screenId === 'intro') {
+    document.getElementById('intro').style.display = 'flex';
+  } else if (screenId === 'question-screen') {
+    const qs = document.getElementById('question-screen');
+    qs.style.display = 'flex';
+    qs.classList.add('active');
+  } else if (screenId === 'results-screen') {
+    const rs = document.getElementById('results-screen');
+    rs.style.display = 'flex';
+    rs.classList.add('active');
+  }
+}
+
+// ── QUIZ LOGIC ────────────────────────────────────────────────────────────────
+function startQuiz() {
+  current = 0;
+  show('question-screen');
+  renderQuestion();
+}
+
+function renderQuestion() {
+  const q = QUESTIONS[current];
+  document.getElementById('q-number').textContent = `Question ${current + 1} of ${QUESTIONS.length}`;
+  document.getElementById('q-text').textContent = q.text;
+
+  // rebuild card animation
+  const card = document.getElementById('q-card');
+  card.style.animation = 'none';
+  card.offsetHeight; // reflow
+  card.style.animation = '';
+
+  // progress
+  const pct = (current / QUESTIONS.length) * 100;
+  document.getElementById('progress-fill').style.width = pct + '%';
+  document.getElementById('progress-label').textContent = `${current} of ${QUESTIONS.length} answered`;
+
+  // back button
+  document.getElementById('btn-back').style.display = current === 0 ? 'none' : '';
+
+  // ratings
+  const wrap = document.getElementById('rating-wrap');
+  wrap.innerHTML = '';
+  const btnNext = document.getElementById('btn-next');
+  btnNext.disabled = answers[current] === null;
+  btnNext.textContent = current === QUESTIONS.length - 1 ? 'See results' : 'Next →';
+
+  for (let v = 1; v <= 5; v++) {
+    const btn = document.createElement('button');
+    btn.className = 'rating-btn' + (answers[current] === v ? ' selected' : '');
+    btn.innerHTML = `<span class="r-num">${v}</span><span class="r-label">${LABELS[v-1]}</span>`;
+    btn.onclick = () => selectRating(v);
+    btn.setAttribute('aria-label', `${v} – ${LABELS[v-1]}`);
+    wrap.appendChild(btn);
+  }
+}
+
+function selectRating(v) {
+  answers[current] = v;
+  document.querySelectorAll('.rating-btn').forEach((b, i) => {
+    b.classList.toggle('selected', i + 1 === v);
+  });
+  document.getElementById('btn-next').disabled = false;
+}
+
+function goNext() {
+  if (answers[current] === null) return;
+  if (current < QUESTIONS.length - 1) {
+    current++;
+    renderQuestion();
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+  } else {
+    showResults();
+  }
+}
+
+function goBack() {
+  if (current > 0) { current--; renderQuestion(); window.scrollTo({ top: 0, behavior: 'smooth' }); }
+}
+
+function restart() {
+  answers.fill(null);
+  current = 0;
+  show('intro');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+}
+
+// ── SCORING ───────────────────────────────────────────────────────────────────
+function computeScores() {
+  const scores = {};
+  DIMS.forEach(dim => {
+    scores[dim.key] = { expressed: 0, wanted: 0 };
+  });
+  QUESTIONS.forEach((q, i) => {
+    if (answers[i] !== null) scores[q.dim][q.type] += answers[i];
+  });
+  return scores;
+}
+
+// ── RESULTS ───────────────────────────────────────────────────────────────────
+function showResults() {
+  document.getElementById('progress-fill').style.width = '100%';
+  show('results-screen');
+  window.scrollTo({ top: 0, behavior: 'smooth' });
+
+  const scores = computeScores();
+  renderBars(scores);
+  setTimeout(() => drawRadar(scores), 100);
+  renderInterpretations(scores);
+}
+
+function renderBars(scores) {
+  const wrap = document.getElementById('score-bars');
+  wrap.innerHTML = '';
+  const MAX = 25;
+  DIMS.forEach(dim => {
+    const block = document.createElement('div');
+    block.className = 'dim-block';
+    block.innerHTML = `
+      <div class="dim-title">
+        <div class="dim-dot" style="background:${dim.color}"></div>
+        ${dim.label}
+      </div>
+      ${['expressed','wanted'].map(type => {
+        const s = scores[dim.key][type];
+        const pct = (s / MAX * 100).toFixed(1);
+        const label = type === 'expressed' ? 'Expressed' : 'Wanted';
+        return `
+          <div class="sub-row">
+            <div class="sub-meta">
+              <span>${label}</span>
+              <span class="sub-score">${s} / ${MAX}</span>
+            </div>
+            <div class="bar-track">
+              <div class="bar-fill" data-pct="${pct}" style="background:${dim.color}"></div>
+            </div>
+          </div>`;
+      }).join('')}
+    `;
+    wrap.appendChild(block);
+  });
+  // animate bars after paint
+  requestAnimationFrame(() => {
+    document.querySelectorAll('.bar-fill').forEach(b => {
+      b.style.width = b.dataset.pct + '%';
+    });
+  });
+}
+
+function drawRadar(scores) {
+  const canvas = document.getElementById('radar-canvas');
+  const ctx = canvas.getContext('2d');
+  const W = canvas.width, H = canvas.height;
+  const cx = W/2, cy = H/2;
+  const R = W * 0.36;
+  const MAX = 25;
+
+  // 6 axes: EI, WI, EC, WC, EA, WA
+  const axes = [
+    { label: 'Expressed\nInclusion', v: scores.inclusion.expressed, color: '#4A9B8E' },
+    { label: 'Wanted\nInclusion',   v: scores.inclusion.wanted,    color: '#4A9B8E' },
+    { label: 'Expressed\nControl',  v: scores.control.expressed,   color: '#E8A84A' },
+    { label: 'Wanted\nControl',     v: scores.control.wanted,      color: '#E8A84A' },
+    { label: 'Expressed\nAffection',v: scores.affection.expressed, color: '#9B7FD4' },
+    { label: 'Wanted\nAffection',   v: scores.affection.wanted,    color: '#9B7FD4' },
+  ];
+  const N = axes.length;
+  const angle = i => (Math.PI * 2 * i / N) - Math.PI / 2;
+
+  // grid rings
+  ctx.clearRect(0, 0, W, H);
+  [0.2, 0.4, 0.6, 0.8, 1.0].forEach(t => {
+    ctx.beginPath();
+    for (let i = 0; i < N; i++) {
+      const a = angle(i);
+      const x = cx + Math.cos(a) * R * t;
+      const y = cy + Math.sin(a) * R * t;
+      i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+    }
+    ctx.closePath();
+    ctx.strokeStyle = 'rgba(255,255,255,0.08)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // spokes
+  axes.forEach((_, i) => {
+    const a = angle(i);
+    ctx.beginPath();
+    ctx.moveTo(cx, cy);
+    ctx.lineTo(cx + Math.cos(a) * R, cy + Math.sin(a) * R);
+    ctx.strokeStyle = 'rgba(255,255,255,0.12)';
+    ctx.lineWidth = 1;
+    ctx.stroke();
+  });
+
+  // data polygon
+  ctx.beginPath();
+  axes.forEach((ax, i) => {
+    const t = ax.v / MAX;
+    const a = angle(i);
+    const x = cx + Math.cos(a) * R * t;
+    const y = cy + Math.sin(a) * R * t;
+    i === 0 ? ctx.moveTo(x, y) : ctx.lineTo(x, y);
+  });
+  ctx.closePath();
+  ctx.fillStyle = 'rgba(74,155,142,0.22)';
+  ctx.fill();
+  ctx.strokeStyle = '#4A9B8E';
+  ctx.lineWidth = 2;
+  ctx.stroke();
+
+  // dots
+  axes.forEach((ax, i) => {
+    const t = ax.v / MAX;
+    const a = angle(i);
+    const x = cx + Math.cos(a) * R * t;
+    const y = cy + Math.sin(a) * R * t;
+    ctx.beginPath();
+    ctx.arc(x, y, 5, 0, Math.PI * 2);
+    ctx.fillStyle = ax.color;
+    ctx.fill();
+  });
+
+  // labels
+  ctx.font = '500 10px Inter, sans-serif';
+  ctx.textAlign = 'center';
+  ctx.textBaseline = 'middle';
+  axes.forEach((ax, i) => {
+    const a = angle(i);
+    const pad = 22;
+    const lx = cx + Math.cos(a) * (R + pad);
+    const ly = cy + Math.sin(a) * (R + pad);
+    const lines = ax.label.split('\n');
+    ctx.fillStyle = ax.color;
+    lines.forEach((line, li) => {
+      ctx.fillText(line, lx, ly + (li - (lines.length - 1) / 2) * 13);
+    });
+  });
+}
+
+function renderInterpretations(scores) {
+  const wrap = document.getElementById('interpretations');
+  wrap.innerHTML = '';
+  const MAX = 25;
+  DIMS.forEach(dim => {
+    const eScore = scores[dim.key].expressed;
+    const wScore = scores[dim.key].wanted;
+    const ePct = eScore / MAX;
+    const wPct = wScore / MAX;
+
+    const eLevel = ePct >= 0.7 ? 'high' : ePct >= 0.4 ? 'moderate' : 'low';
+    const wLevel = wPct >= 0.7 ? 'high' : wPct >= 0.4 ? 'moderate' : 'low';
+
+    const interp = {
+      inclusion: {
+        expressed: {
+          high: 'You actively draw people in and initiate social connection.',
+          moderate: 'You engage socially when the context feels right.',
+          low: 'You tend to let others take the initiative in social settings.'
+        },
+        wanted: {
+          high: 'Being included matters a great deal to you.',
+          moderate: 'You appreciate being included, though you can manage without it.',
+          low: 'You are comfortable with less active social integration from others.'
+        }
+      },
+      control: {
+        expressed: {
+          high: 'You naturally take the lead and set direction for others.',
+          moderate: 'You step up when needed but are comfortable sharing leadership.',
+          low: 'You prefer to contribute without taking formal control.'
+        },
+        wanted: {
+          high: 'You work best with clear structure and authoritative direction.',
+          moderate: 'You appreciate guidance but can navigate ambiguity.',
+          low: 'You prefer autonomy and minimal external direction.'
+        }
+      },
+      affection: {
+        expressed: {
+          high: 'You openly share warmth and foster emotional closeness.',
+          moderate: 'You express care in trusted relationships.',
+          low: 'You tend to keep emotional expression restrained.'
+        },
+        wanted: {
+          high: 'Emotional closeness and affirmation from others is important to you.',
+          moderate: 'You appreciate warmth from others without depending on it.',
+          low: 'You are comfortable with more reserved emotional exchange.'
+        }
+      }
+    };
+
+    const block = document.createElement('div');
+    block.className = 'interp-block';
+    block.innerHTML = `
+      <h3>${dim.label}</h3>
+      <p><strong>Expressed (${eScore}/25):</strong> ${interp[dim.key].expressed[eLevel]}</p>
+      <br>
+      <p><strong>Wanted (${wScore}/25):</strong> ${interp[dim.key].wanted[wLevel]}</p>
+    `;
+    wrap.appendChild(block);
+  });
+}
+</script>
+</body>
+</html>
